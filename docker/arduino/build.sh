@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker build -t qooba/arduino .
+docker build -t qooba/tinyml-arduino:lab .

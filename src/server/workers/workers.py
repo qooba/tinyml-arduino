@@ -11,7 +11,7 @@ from di import IContainer, IFactory
 from services.ws import WebSocketManager
 from services.training import TrainingService
 import serial
-from async_timeout import timeout
+#from async_timeout import timeout
 
 class IWorker:
     def work(self) -> None: ...

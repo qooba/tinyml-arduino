@@ -1,2 +1,2 @@
 #!/bin/bash
-docker build -t qooba/arduino:vim .
+docker build -t qooba/tinyml-arduino:vim .
