@@ -1,4 +1,4 @@
-# AI Arduino
+# TinyML with Arduino
 
 
 ## THANKS
