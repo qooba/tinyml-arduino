@@ -15,29 +15,13 @@ Vue.component("dropzone",{
   },
   mounted(){
     this.uploadDropzone= new Dropzone(this.$el, {
-        url:"/api/scissors/"+this.modelName, 
+        url:"/api/arduino/tinyml", 
         paramName: "file",
         method: "post",
         timeout: 36000000,
         responseType: 'arraybuffer',
         success: function(file, response){
             console.log(file)
-            var imageBlob = response;
-            var imageBytes = btoa(
-              new Uint8Array(response)
-                .reduce((data, byte) => data + String.fromCharCode(byte), '')
-            );
-
-                var outputImg = document.getElementById('output');
-                outputImg.src = 'data:image/png;base64,'+imageBytes;
-
-                var inputImg = document.getElementById('input');
-                inputImg.src = file.dataURL;
-
-                //var blob = new Blob(new Uint8Array(response), {type: "image/png"});
-                //saveAs(blob, 'out.png');
-
-
         }
     });
   }
@@ -55,6 +39,8 @@ Vue.component('tinyml', {
       capturedData: "Red,Green,Blue\n",
       numberOfSamples: 1000,
       sampleIdx: 0,
+      bear: "/images/bear_guess.png",
+      mode: "capture",
       myStyle: {
           //width: "100px",
           height: "200px",
@@ -67,7 +53,8 @@ Vue.component('tinyml', {
     currentProject: null
   },
   methods: {
-    watch(){
+    watch(mode){
+        this.mode=mode;
         this.ws = new WebSocket("wss://"+window.location.host+"/ws");
         this.ws.onmessage = this.handleEvent;
     },
@@ -92,14 +79,31 @@ Vue.component('tinyml', {
     },
     handleEvent(event) {
         //console.log(event.data);
-        if(this.sampleIdx<this.numberOfSamples){
-            e=event.data.split(',');
+        //
+        e=event.data.split(',');
+        if(this.mode=='capture' && this.sampleIdx<this.numberOfSamples){
             this.myStyle.backgroundColor=`rgb(${e[4]},${e[5]},${e[6]})`
             this.capturedData+=`${e[0]},${e[1]},${e[2]}\n`;
             this.sampleIdx+=1;
         }
-
-        //data=JSON.parse(event.data.replaceAll("'",'"'));
+        else if(this.mode=='classify'){
+            console.log(event.data);
+            res=e.map(parseFloat);
+            let i = res.indexOf(Math.max.apply(Math,res));
+            switch(i) {
+              case 0:
+                this.bear="/images/bear_green.png";
+                break;
+              case 1:
+                this.bear="/images/bear_red.png";
+                break;
+              case 2:
+                this.bear="/images/bear_white.png";
+                break;
+              default:
+                this.bear="/images/bear_guess.png";
+            }
+        }
     }
   },
   created(){
@@ -119,7 +123,7 @@ Vue.component('tinyml', {
         <a target="_blank" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" v-on:click="prepare()">PREPARE</a>
         &nbsp&nbsp
         &nbsp&nbsp
-        <a target="_blank" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" v-on:click="watch()">WATCH</a>
+        <a target="_blank" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" v-on:click="watch('capture')">WATCH</a>
         &nbsp&nbsp
         &nbsp&nbsp
         <a target="_blank" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" v-on:click="stop()">STOP</a>
@@ -147,8 +151,23 @@ Vue.component('tinyml', {
     <div class="demo-charts mdl-color--white mdl-shadow--2dp mdl-cell mdl-cell--12-col mdl-grid center-align ">
         <div class="typo-styles__demo mdl-typography--title">STEP 2 UPLOAD TENSORFLOW LITE MODEL (model.h) :</div><br/>
     </div>
-    <div class="demo-charts mdl-color--white mdl-shadow--2dp mdl-cell mdl-cell--4-col mdl-grid center-align ">
-      <dropzone :current-project="currentProject" ref="dropzone"></dropzone>
+    <div class="demo-charts mdl-color--white mdl-shadow--12dp mdl-cell mdl-cell--12-col mdl-grid center-align ">
+      <dropzone :current-project="currentProject" ref="dropzone" style="width:100%"></dropzone>
+    </div>
+    <div class="demo-charts mdl-color--white mdl-shadow--2dp mdl-cell mdl-cell--12-col mdl-grid center-align ">
+        <div class="typo-styles__demo mdl-typography--title">STEP 3 CLASSIFY BY COLOR</div><br/>
+        &nbsp&nbsp
+        &nbsp&nbsp
+        <a target="_blank" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" v-on:click="watch('classify')">WATCH</a>
+        &nbsp&nbsp
+        &nbsp&nbsp
+        <a target="_blank" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" v-on:click="stop()">STOP</a>
+        &nbsp&nbsp
+
+    </div>
+
+    <div class="demo-charts mdl-color--white mdl-shadow--2dp mdl-cell mdl-cell--12-col mdl-grid center-align ">
+        <img v-bind:src="bear" class="center" />
     </div>
 
   </div>

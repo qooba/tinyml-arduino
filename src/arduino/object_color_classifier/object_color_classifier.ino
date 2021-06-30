@@ -122,10 +122,12 @@ void loop() {
 
     // output results
     for (int i = 0; i < NUM_CLASSES; i++) {
-      Serial.print(CLASSES[i]);
-      Serial.print(" ");
+      //Serial.print(CLASSES[i]);
+      //Serial.print(" ");
       Serial.print(int(tflOutputTensor->data.f[i] * 100));
-      Serial.print("%\n");
+      if(i < NUM_CLASSES-1){
+        Serial.print(",");
+      }
     }
     Serial.println();
 

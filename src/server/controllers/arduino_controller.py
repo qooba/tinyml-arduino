@@ -25,8 +25,15 @@ class ArduinoController(Controller):
         worker.send(msg)
         return self.json({'status':'ok'})
 
-    @routes.get("/api/voice/close")
-    async def close(self, request):
-        await self.socket_manager.close_all()
+    @routes.post("/api/arduino/tinyml")
+    async def tinyml(self, request):
+        post = await request.post()
+        package_file = post.get('file').file.read()
+        with open(f'/arduino/object_color_classifier/model.h','wb') as f:
+            f.write(package_file)
+
+        worker=self.factory.create(IWorker,'arduino_worker')
+        msg=json.dumps({'feature': 'objectcolorclassifier'})
+        worker.send(msg)
         return self.json({'status':'ok'})
 
